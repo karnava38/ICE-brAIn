@@ -1,0 +1,14 @@
+[video]
+# Input/output settings are intentionally kept outside Python code.
+sample_stride = 1
+
+[detection]
+confidence_threshold = 0.25
+model_path = "models/hockeyai.pt"
+
+[tracking]
+tracker = "bytetrack.yaml"
+
+[benchmark]
+# These are targets, not achieved results.
+target_fps = 10.0
