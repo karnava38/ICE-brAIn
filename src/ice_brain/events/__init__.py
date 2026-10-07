@@ -1,0 +1,1 @@
+"""Hockey event detection components."""
