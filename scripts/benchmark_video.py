@@ -23,6 +23,8 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main() -> None:
     args = build_parser().parse_args()
+    if not 0.0 < args.conf <= 1.0:
+        raise SystemExit("--conf must be > 0 and <= 1")
     if args.stride < 1:
         raise SystemExit("--stride must be >= 1")
 
@@ -35,12 +37,9 @@ def main() -> None:
 
     summary = run_benchmark(
         video_path=args.video,
-        model_path=args.model,
+        tracker=tracker,
         output_dir=args.output,
-        confidence_threshold=args.conf,
         sample_stride=args.stride,
-        tracker_config=args.tracker,
-        device=args.device,
         class_name=tracker.class_name,
     )
 
