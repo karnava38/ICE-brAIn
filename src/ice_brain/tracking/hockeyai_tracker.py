@@ -31,6 +31,17 @@ class HockeyAIByteTracker:
         self.confidence_threshold = confidence_threshold
         self.tracker_config = tracker_config
         self.device = device
+        self.class_names = self._normalize_names(self.model.names)
+
+    @staticmethod
+    def _normalize_names(names: Any) -> dict[int, str]:
+        if isinstance(names, dict):
+            return {int(k): str(v) for k, v in names.items()}
+        return {i: str(v) for i, v in enumerate(names)}
+
+    def class_name(self, class_id: int) -> str:
+        """Return the model's class name."""
+        return self.class_names.get(class_id, str(class_id))
 
     def track_frame(self, frame: Any, frame_index: int) -> list[Track]:
         """Track one frame while retaining ByteTrack state between calls."""
