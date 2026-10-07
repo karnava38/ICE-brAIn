@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Environments
+.venv/
+venv/
+env/
+
+# Editors
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data and models
+data/raw/*
+data/benchmark/*
+data/processed/*
+models/*.pt
+models/*.pth
+models/*.onnx
+
+# Logs and outputs
+logs/
+outputs/
+*.log
+
+# Secrets
+.env
+.env.*
+!.env.example
