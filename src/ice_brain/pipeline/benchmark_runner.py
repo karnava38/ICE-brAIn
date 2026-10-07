@@ -15,15 +15,15 @@ from ice_brain.tracking.hockeyai_tracker import HockeyAIByteTracker
 
 def run_benchmark(
     video_path: str | Path,
-    model_path: str | Path,
+    tracker: HockeyAIByteTracker,
     output_dir: str | Path,
-    confidence_threshold: float = 0.25,
     sample_stride: int = 1,
-    tracker_config: str = "bytetrack.yaml",
-    device: str | int | None = None,
     class_name: Callable[[int], str] | None = None,
 ) -> dict:
     """Run tracking and save one JSONL record per sampled frame."""
+    if sample_stride < 1:
+        raise ValueError("sample_stride must be >= 1")
+
     video_path = Path(video_path)
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -36,13 +36,6 @@ def run_benchmark(
     total_frames = int(capture.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
     width = int(capture.get(cv2.CAP_PROP_FRAME_WIDTH) or 0)
     height = int(capture.get(cv2.CAP_PROP_FRAME_HEIGHT) or 0)
-
-    tracker = HockeyAIByteTracker(
-        model_path=model_path,
-        confidence_threshold=confidence_threshold,
-        tracker_config=tracker_config,
-        device=device,
-    )
 
     records_path = output_dir / "tracks.jsonl"
     stats = BenchmarkStats()
@@ -63,7 +56,7 @@ def run_benchmark(
 
                     counts: dict[str, int] = {}
                     for track in tracks:
-                        name = class_name(track.class_id) if class_name else str(track.class_id)
+                        name = class_name(track.class_id) if class_name else tracker.class_name(track.class_id)
                         counts[name] = counts.get(name, 0) + 1
                         records.write(
                             json.dumps(
