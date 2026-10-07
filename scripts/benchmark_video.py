@@ -5,8 +5,8 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from ice_brain.detection.hockeyai import HockeyAIDetector
 from ice_brain.pipeline.benchmark_runner import run_benchmark
+from ice_brain.tracking.hockeyai_tracker import HockeyAIByteTracker
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -26,9 +26,10 @@ def main() -> None:
     if args.stride < 1:
         raise SystemExit("--stride must be >= 1")
 
-    detector = HockeyAIDetector(
+    tracker = HockeyAIByteTracker(
         model_path=args.model,
         confidence_threshold=args.conf,
+        tracker_config=args.tracker,
         device=args.device,
     )
 
@@ -40,7 +41,7 @@ def main() -> None:
         sample_stride=args.stride,
         tracker_config=args.tracker,
         device=args.device,
-        class_name=detector.class_name,
+        class_name=tracker.class_name,
     )
 
     print("\nICE-brAIn benchmark")
