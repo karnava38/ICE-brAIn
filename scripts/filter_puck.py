@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from collections import Counter
 from pathlib import Path
 
 from ice_brain.puck.filter import PuckCandidate, SinglePuckFilter
@@ -40,16 +41,25 @@ def filter_puck(
 
     selector = SinglePuckFilter(frame_width, frame_height)
     selected_frames: list[int] = []
+    selected_track_ids: list[int] = []
+    candidate_counts = Counter()
     candidate_frames = len(by_frame)
-    raw_multi_frames = sum(1 for values in by_frame.values() if len(values) >= 2)
+    raw_multi_frames = 0
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w", encoding="utf-8") as out:
         for frame_index in sorted(by_frame):
-            puck = selector.update(by_frame[frame_index])
+            candidates = by_frame[frame_index]
+            candidate_counts[len(candidates)] += 1
+            if len(candidates) >= 2:
+                raw_multi_frames += 1
+
+            puck = selector.update(candidates)
             if puck is None:
                 continue
+
             selected_frames.append(frame_index)
+            selected_track_ids.append(puck.track_id)
             out.write(
                 json.dumps(
                     {
@@ -69,6 +79,12 @@ def filter_puck(
         for a, b in zip(selected_frames, selected_frames[1:])
         if b > a + 1
     ]
+    track_switches = sum(
+        1
+        for a, b in zip(selected_track_ids, selected_track_ids[1:])
+        if a != b
+    )
+    total_candidates = sum(count * frames for count, frames in candidate_counts.items())
 
     return {
         "input": str(input_path),
@@ -79,6 +95,12 @@ def filter_puck(
         "selected_coverage": round(
             len(selected_frames) / candidate_frames, 4
         ) if candidate_frames else 0.0,
+        "mean_raw_candidates_per_observed_frame": round(
+            total_candidates / candidate_frames, 4
+        ) if candidate_frames else 0.0,
+        "raw_candidate_count_distribution": dict(sorted(candidate_counts.items())),
+        "selected_unique_track_ids": len(set(selected_track_ids)),
+        "selected_track_switches": track_switches,
         "longest_selected_gap_frames": max(gaps, default=0),
         "mean_selected_gap_frames": round(sum(gaps) / len(gaps), 2) if gaps else 0.0,
     }
