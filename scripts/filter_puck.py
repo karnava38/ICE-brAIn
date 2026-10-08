@@ -102,3 +102,4 @@ def main() -> None:
 
     report = filter_puck(args.input, args.output, args.width, args.height)
     print(json.dumps(report, indent=2))
+\n\nif __name__ == "__main__":\n    main()\n
