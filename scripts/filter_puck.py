@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import argparse
 import json
-from collections import Counter
 from pathlib import Path
 
 from ice_brain.puck.filter import PuckCandidate, SinglePuckFilter
@@ -40,10 +39,9 @@ def filter_puck(
             )
 
     selector = SinglePuckFilter(frame_width, frame_height)
-    selected = 0
+    selected_frames: list[int] = []
     candidate_frames = len(by_frame)
     raw_multi_frames = sum(1 for values in by_frame.values() if len(values) >= 2)
-    selected_frames: list[int] = []
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w", encoding="utf-8") as out:
@@ -51,7 +49,6 @@ def filter_puck(
             puck = selector.update(by_frame[frame_index])
             if puck is None:
                 continue
-            selected += 1
             selected_frames.append(frame_index)
             out.write(
                 json.dumps(
@@ -72,13 +69,16 @@ def filter_puck(
         for a, b in zip(selected_frames, selected_frames[1:])
         if b > a + 1
     ]
+
     return {
         "input": str(input_path),
         "output": str(output_path),
         "candidate_frames": candidate_frames,
         "raw_multi_candidate_frames": raw_multi_frames,
-        "selected_frames": selected,
-        "selected_coverage": round(selected / candidate_frames, 4) if candidate_frames else 0.0,
+        "selected_frames": len(selected_frames),
+        "selected_coverage": round(
+            len(selected_frames) / candidate_frames, 4
+        ) if candidate_frames else 0.0,
         "longest_selected_gap_frames": max(gaps, default=0),
         "mean_selected_gap_frames": round(sum(gaps) / len(gaps), 2) if gaps else 0.0,
     }
@@ -102,4 +102,7 @@ def main() -> None:
 
     report = filter_puck(args.input, args.output, args.width, args.height)
     print(json.dumps(report, indent=2))
-\n\nif __name__ == "__main__":\n    main()\n
+
+
+if __name__ == "__main__":
+    main()
